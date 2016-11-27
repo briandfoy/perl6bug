@@ -1,0 +1,50 @@
+
+
+=head1 NAME
+
+perl6bug - a bug reporting tool for Perl 6
+
+=head1 SYNOPSIS
+
+B<perl6bug>
+
+B<perl6bug> S<[ B<-v> ]> S<[ B<-a> I<address> ]> S<[ B<-s> I<subject> ]>
+S<[ B<-b> I<body> | B<-f> I<inputfile> ]> S<[ B<-F> I<outputfile> ]>
+S<[ B<-r> I<returnaddress> ]>
+S<[ B<-e> I<editor> ]> S<[ B<-c> I<adminaddress> | B<-C> ]>
+S<[ B<-S> ]> S<[ B<-t> ]>  S<[ B<-d> ]>  S<[ B<-A> ]>  S<[ B<-h> ]> S<[ B<-T> ]>
+
+B<perl6bug> S<[ B<-v> ]> S<[ B<-r> I<returnaddress> ]>
+ S<[ B<-A> ]> S<[ B<-ok> | B<-okay> | B<-nok> | B<-nokay> ]>
+
+=head1 DESCRIPTION
+
+=head1 BUGS
+
+=head1 SEE ALSO
+
+
+=head1 SOURCE AVAILABILITY
+
+This source is in Github:
+
+	https://github.com/briandfoy/perl6bug
+
+=head1 AUTHOR
+
+brian d foy, C<< <bdfoy@cpan.org> >>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright © 2016, brian d foy <bdfoy@cpan.org>. All rights reserved.
+
+This program is licensed under the Artistic License 2. A LICENSE file
+should have come with this distribution or be available in the source
+repository.
+
+=cut
+
+
+multi MAIN ( :version ) {
+	say "$*PROGRAM version 123";
+	}
