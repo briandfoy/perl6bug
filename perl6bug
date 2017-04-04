@@ -1,4 +1,17 @@
+#!perl6
 
+use v6;
+our $VERSION = "0.001";
+
+my %defaults = (
+	address        => 'rakudobug@perl.org',
+	cc             => '',
+	bug_address    => 'rakudobug@perl.org',
+	test_address   => 'perl6bug-test@perl.org',
+	thanks_address => 'perl6-thanks@perl.org',
+	);
+
+=begin pod
 
 =head1 NAME
 
@@ -14,7 +27,7 @@ S<[ B<-r> I<returnaddress> ]>
 S<[ B<-e> I<editor> ]> S<[ B<-c> I<adminaddress> | B<-C> ]>
 S<[ B<-S> ]> S<[ B<-t> ]>  S<[ B<-d> ]>  S<[ B<-A> ]>  S<[ B<-h> ]> S<[ B<-T> ]>
 
-B<perl6bug> S<[ B<-v> ]> S<[ B<-r> I<returnaddress> ]>
+B<perl6bug> S<[ B<--verbose> ]> S<[ B<--return> I<returnaddress> ]>
  S<[ B<-A> ]> S<[ B<-ok> | B<-okay> | B<-nok> | B<-nokay> ]>
 
 =head1 DESCRIPTION
@@ -36,15 +49,136 @@ brian d foy, C<< <bdfoy@cpan.org> >>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2016, brian d foy <bdfoy@cpan.org>. All rights reserved.
+Copyright © 2016-2017, brian d foy C<< <bdfoy@cpan.org> >>. All rights reserved.
 
 This program is licensed under the Artistic License 2. A LICENSE file
 should have come with this distribution or be available in the source
 repository.
 
-=cut
+=end pod
 
+multi MAIN (
+	Bool :$E? = False,  # collect environment details
+	Bool :$V? = False,  # collect gory details
+	Bool :$R? = False , # supress the repo search paths
+	) {
+	my $str;
+	$str ~= report-version();
+	$str ~= collect-perl-info();
+	$str ~= collect-repo-info() unless $R;
+	$str ~= collect-env-info() unless $E;
+	$str ~= gory-details() if $V;
 
-multi MAIN ( :version ) {
-	say "$*PROGRAM version 123";
+	put $str;
 	}
+
+multi MAIN ( :$version ) { put report-version() }
+
+sub report-version () { "$*PROGRAM version $VERSION" }
+
+sub collect-perl-info () {
+	my $perl-info-match = perl-info();
+
+	my $str = qq:heredoc/END/;
+
+--- Perl variables ---
+Perl:       $*PERL
+Executable: $*EXECUTABLE-NAME
+Flavor:     $perl-info-match<flavor> $perl-info-match<flavor-version>
+VM:         $perl-info-match<vm> $perl-info-match<vm-version>
+Distro:     $*DISTRO
+Kernel:     $*KERNEL
+PERL6LIB:   { %*ENV{'PERL6LIB'} // '' }
+END
+	}
+
+sub collect-env-info () {
+	my $str = "\n--- Other Environment ---\n";
+	for interesting-env() -> $k {
+		next unless %*ENV{$k}:exists;
+		$str ~= "$k: %*ENV{$k}\n";
+		}
+
+	$str;
+	}
+
+sub collect-repo-info () {
+	my $str = "\n--- Repo chain ---\n" ~
+		join "\n",
+		grep { $_ ~~ any( CompUnit::Repository::FileSystem, CompUnit::Repository::Installation ) },
+		$*REPO.repo-chain;
+
+	$str ~= "\n";
+	}
+
+sub interesting-env () {
+	my @interesting_keys = <
+		BASH_VERSION HOSTTYPE LANG LANGUAGE LC_ALL LESSCHARSET LINES
+		LOCAL_PATH LOCALE_I_WANT OSTYPE SHELL SHELLOPTS SHLVL TERM
+		>.sort;
+	}
+
+sub gory-details () {
+	"--- Gory details ---\n" ~ qqx/$*EXECUTABLE -V/
+	}
+
+sub perl-info () {
+	# This is Rakudo version 2017.01 built on MoarVM version 2017.01
+	my $string = qqx/$*EXECUTABLE -v/;
+	$string ~~ m:s/ This is $<flavor> = (\S+) version $<flavor-version> = (\S+) built on $<vm> = (\S+) version $<vm-version> = (\S+)/;
+	return $/;
+	}
+
+sub USAGE {
+    print q:heredoc/EOF/;
+
+This program is designed to help you generate and send bug reports
+(and thank-you notes) about perl5 and the modules which ship with it.
+
+In most cases, you can just run "$*PROGRAM" interactively from a command
+line without any special arguments and follow the prompts.
+
+Advanced usage:
+
+$*PROGRAM  [-v] [-a address] [-s subject] [-b body | -f inpufile ] [ -F outputfile ]
+    [-r returnaddress] [-e editor] [-c adminaddress | -C] [-S] [-t] [-h]
+    [-p patchfile ]
+$*PROGRAM  [-v] [-r returnaddress] [-A] [-ok | -okay | -nok | -nokay]
+
+
+Options:
+
+  -v    Include Verbose configuration data in the report
+  -f    File containing the body of the report. Use this to
+        quickly send a prepared message.
+  -p    File containing a patch or other text attachment. Separate
+        multiple files with commas.
+  -F    File to output the resulting mail message to, instead of mailing.
+  -S    Send without asking for confirmation.
+  -a    Address to send the report to. Defaults to '$address'.
+  -c    Address to send copy of report to. Defaults to '{%defaults<cc>}'.
+  -C    Don't send copy to administrator.
+  -s    Subject to include with the message. You will be prompted
+        if you don't supply one on the command line.
+  -b    Body of the report. If not included on the command line, or
+        in a file with -f, you will get a chance to edit the message.
+  -r    Your return address. The program will ask you to confirm
+        this if you don't give it here.
+  -e    Editor to use.
+  -t    Test mode. The target address defaults to '{%defaults<test_address>}'.
+  -T    Thank-you mode. The target address defaults to '{%defaults<thanks_address>}'.
+  -d    Data mode.  This prints out your configuration data, without mailing
+        anything. You can use this with -v to get more complete data.
+  -A    Don't send a bug received acknowledgement to the return address.
+  -ok   Report successful build on this system to perl porters
+        (use alone or with -v). Only use -ok if *everything* was ok:
+        if there were *any* problems at all, use -nok.
+  -okay As -ok but allow report from old builds.
+  -nok  Report unsuccessful build on this system to perl porters
+        (use alone or with -v). You must describe what went wrong
+        in the body of the report which you will be asked to edit.
+  -nokay As -nok but allow report from old builds.
+  -h    Print this help message.
+
+EOF
+}
