@@ -82,7 +82,7 @@ sub collect-perl-info () {
 	my $str = qq:heredoc/END/;
 
 --- Perl variables ---
-Perl:       $*PERL
+Perl:       $*PERL.version
 Executable: $*EXECUTABLE-NAME
 Flavor:     $perl-info-match<flavor> $perl-info-match<flavor-version>
 VM:         $*VM.name $*VM.version
