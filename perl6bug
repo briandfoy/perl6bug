@@ -123,9 +123,12 @@ sub gory-details () {
 	}
 
 sub perl-info () {
-	# This is Rakudo version 2017.01 built on MoarVM version 2017.01
+#`(
+This is Rakudo Star version 2017.10 built on MoarVM version 2017.10
+implementing Perl 6.c.
+)
 	my $string = qqx/$*EXECUTABLE -v/;
-	$string ~~ m:s/ This is $<flavor> = (\S+) version $<flavor-version> = (\S+) built on $<vm> = (\S+) version $<vm-version> = (\S+)/;
+	$string ~~ m:s/ This is $<flavor> = (\S+.+\S+) version $<flavor-version> = (\S+) built on $<vm> = (\S+) version $<vm-version> = (\S+)/;
 	return $/;
 	}
 
