@@ -85,7 +85,7 @@ sub collect-perl-info () {
 Perl:       $*PERL
 Executable: $*EXECUTABLE-NAME
 Flavor:     $perl-info-match<flavor> $perl-info-match<flavor-version>
-VM:         $perl-info-match<vm> $perl-info-match<vm-version>
+VM:         $*VM.name $*VM.version
 Distro:     $*DISTRO
 Kernel:     $*KERNEL
 PERL6LIB:   { %*ENV{'PERL6LIB'} // '' }
